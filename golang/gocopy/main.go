@@ -6,20 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
-
-type Rename struct {
-	help bool
-	detail bool
-	force bool
-	recursion bool
-	link bool
-	hardLink bool
-	keep bool
-	backup string
-}
-
+//var 变量
 var (
 	BACKUP    bool
 	HELP      bool
@@ -32,6 +22,7 @@ var (
 	SUFFIX    string
 )
 
+//GetCurPath 获取当前路径
 func GetCurPath() string {
 	getwd, err := os.Getwd()
 	if err != nil {
@@ -40,27 +31,88 @@ func GetCurPath() string {
 	return getwd
 }
 
+//FileAbs 把相对路径变成绝对路径
 func FileAbs(filePath string) string {
-	if ! filepath.IsAbs(filePath) {
+	if !filepath.IsAbs(filePath) {
 		filePath, _ = filepath.Abs(filePath)
 	}
 	return filePath
 }
 
-func fileExists(filename string) bool {
+//FileExists 判断路径是否存在
+func FileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil || os.IsExist(err)
 }
 
+//FileType 判断路径类型
+func FileType(filePath string) string {
+	_type, err := os.Stat(filePath)
+	if err != nil {
+		panic(err)
+	}
+	if _type.IsDir() {
+		return "dir"
+	}
+	return "file"
+}
+
+//CopyFile 复制
 func CopyFile(src, dst string) {
 
 }
 
+//Judge 判断
+func Judge(src []string, dst string) {
+	// 判断动作
 
+	// 判断源文件或目录是否存在
+	for i := 0; i < len(src); i++ {
+		if !FileExists(src[i]) {
+			err := fmt.Errorf("not exists file %s", src[i])
+			fmt.Println(err)
+			os.Exit(100)
+		}
+	}
+
+	if len(src) != 1 {
+		if FileType(dst) != "dir" {
+			fmt.Printf("%s not is direcoty", dst)
+		}
+	} else if len(src) == 1 {
+		if strings.HasPrefix(dst, "/") {
+			dst = dst[:len(dst)-1]
+			if !FileExists(dst) {
+				fmt.Printf("not exists file %s", dst)
+				os.Exit(100)
+			}
+			if FileType(dst) != "dir" {
+				fmt.Printf("%s not is direcoty", dst)
+				os.Exit(100)
+			}
+		} else {
+			dstDir := filepath.Dir(dst)
+			if !FileExists(dstDir) {
+				fmt.Printf("%s not exists", dstDir)
+			}
+			if FileType(dstDir) != "dir" {
+				fmt.Printf("%s not is direcoty", dstDir)
+				os.Exit(100)
+			}
+		}
+	}
+}
+
+//Help 显示帮助
+func Help() {
+	flag.Usage()
+}
+
+//Start 开始支持
 func Start(files []string) {
 	fileNumber := len(files)
-	dstFile := FileAbs(files[fileNumber - 1])
-	srcFiles := files[:fileNumber - 1]
+	dstFile := FileAbs(files[fileNumber-1])
+	srcFiles := files[:fileNumber-1]
 
 	for i := 0; i < len(srcFiles); i++ {
 		srcFiles[i] = FileAbs(srcFiles[i])
@@ -69,50 +121,26 @@ func Start(files []string) {
 	Judge(srcFiles, dstFile)
 
 	for i := 0; i < len(srcFiles); i++ {
-		CopyFile(srcFiles[i], dstFile)
+		if FileType(srcFiles[i]) == "file" {
+			CopyFile(srcFiles[i], dstFile)
+		} else {
+
+		}
 	}
 }
 
-
-func Judge(src []string, dst string) {
-	// 判断动作
-
-	for i := 0; i < len(srcFiles); i++ {
-		if ! fileExists(srcFiles[i]) {
-			err := fmt.Errorf("not exists file %s", srcFiles[i])
-			fmt.Println(err)
-			os.Exit(100)
-		}
+//Init 参数初始化
+func Init() {
+	if FORCE && KEEP {
+		KEEP = false
+	}
+	if BACKUP && SUFFIX == "" {
+		SUFFIX = time.Now().Format("200601021504")
 	}
 
-	if strings.HasPrefix(dst, "/") {
-		dst = dst[:len(dst) - 1]
-		_, err := os.Stat(dst)
-		if err != nil {
-			err := os.Mkdir(dst, 766)
-			if err != nil {
-				panic(err)
-			}
-		}
+	if !BACKUP && SUFFIX != "" {
+		SUFFIX = ""
 	}
-
-	dstType, err := os.Stat(dst)
-	if err != nil {
-		if len(src) != 1 {
-			fmt.Printf("目录路径不存在")
-			os.Exit(10)
-		}
-	}
-	if len(src) != 1 && ! dstType.IsDir() {
-		fmt.Printf("源文件或目录有多个，但目录路径不是目录")
-		os.Exit(10)
-	}
-
-}
-
-
-func Help()  {
-	flag.Usage()
 }
 
 func main() {
@@ -128,6 +156,10 @@ func main() {
 	flag.StringVar(&SUFFIX, "s", "", "指定备份目标文件的后缀, 与-b配合使用")
 
 	flag.Parse()
+
+	fmt.Println("suffix: ", SUFFIX)
+	fmt.Println("backup: ", BACKUP)
+	os.Exit(0)
 
 	if flag.NArg() < 2 {
 		Help()
