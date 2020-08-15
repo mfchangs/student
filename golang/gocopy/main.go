@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,19 +59,80 @@ func FileType(filePath string) string {
 	return "file"
 }
 
+//ReadInput kkk
+func ReadInput(filepath string) string {
+	for {
+		fmt.Printf("%s exists override? y/n   ", filepath)
+		r := bufio.NewReader(os.Stdin)
+		input, _, _ := r.ReadLine()
+		inputContext := strings.TrimSpace(string(input))
+		fmt.Printf("input: %s", inputContext)
+		if strings.ToLower(inputContext) == "y" || strings.ToLower(inputContext) == "n" {
+			return inputContext
+		}
+	}
+}
+
+//MobileAction dddddd
+func MobileAction(src, dst string) error {
+	srcContext, err := os.Open(src)
+	if err != nil {
+		errContext := fmt.Errorf("error: read %s failed, %s", src, err)
+		return errContext
+	}
+	defer srcContext.Close()
+
+	dstContext, err := os.Create(dst)
+	if err != nil {
+		errContext := fmt.Errorf("error: read %s failed, %s", dst, err)
+		return errContext
+	}
+	defer dstContext.Close()
+
+	_, err = io.Copy(dstContext, srcContext)
+	if err != nil {
+		errContext := fmt.Errorf("error: copy src %s to %s failed, %s", src, dst, err)
+		return errContext
+	}
+	return nil
+
+}
+
 //CopyFile 复制
 func CopyFile(src, dst string) {
 
+	if FileExists(dst) {
+		if !FORCE {
+			if ReadInput(dst) == "n" {
+				return
+			}
+		}
+		if BACKUP {
+			backupDst := dst + "_" + SUFFIX
+			err := MobileAction(dst, backupDst)
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	if DETAIL {
+		fmt.Printf("%s -> %s", src, dst)
+	}
+
+	err := MobileAction(src, dst)
+	if err != nil {
+		panic(err)
+	}
 }
 
 //Judge 判断
 func Judge(src []string, dst string) {
-	// 判断动作
 
 	// 判断源文件或目录是否存在
 	for i := 0; i < len(src); i++ {
 		if !FileExists(src[i]) {
-			err := fmt.Errorf("not exists file %s", src[i])
+			err := fmt.Errorf("not exists src file %s", src[i])
 			fmt.Println(err)
 			os.Exit(100)
 		}
@@ -80,7 +143,7 @@ func Judge(src []string, dst string) {
 			fmt.Printf("%s not is direcoty", dst)
 		}
 	} else if len(src) == 1 {
-		if strings.HasPrefix(dst, "/") {
+		if strings.HasSuffix(dst, "/") {
 			dst = dst[:len(dst)-1]
 			if !FileExists(dst) {
 				fmt.Printf("not exists file %s", dst)
@@ -114,6 +177,9 @@ func Start(files []string) {
 	dstFile := FileAbs(files[fileNumber-1])
 	srcFiles := files[:fileNumber-1]
 
+	fmt.Println("src: ", srcFiles)
+	fmt.Println("dst: ", dstFile)
+
 	for i := 0; i < len(srcFiles); i++ {
 		srcFiles[i] = FileAbs(srcFiles[i])
 	}
@@ -135,6 +201,7 @@ func Init() {
 		KEEP = false
 	}
 	if BACKUP && SUFFIX == "" {
+		fmt.Println(11)
 		SUFFIX = time.Now().Format("200601021504")
 	}
 
@@ -157,10 +224,6 @@ func main() {
 
 	flag.Parse()
 
-	fmt.Println("suffix: ", SUFFIX)
-	fmt.Println("backup: ", BACKUP)
-	os.Exit(0)
-
 	if flag.NArg() < 2 {
 		Help()
 		os.Exit(1)
@@ -168,6 +231,7 @@ func main() {
 		Help()
 		os.Exit(0)
 	}
-
+	fmt.Println(SUFFIX == "", SUFFIX)
+	Init()
 	Start(flag.Args())
 }
