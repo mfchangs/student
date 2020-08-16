@@ -59,7 +59,7 @@ func FileType(filePath string) string {
 	return "file"
 }
 
-//ReadInput kkk
+//ReadInput 接受输入
 func ReadInput(filepath string) string {
 	for {
 		fmt.Printf("%s exists override? y/n   ", filepath)
@@ -73,9 +73,10 @@ func ReadInput(filepath string) string {
 	}
 }
 
-//MobileAction dddddd
+//MobileAction 执行文件移动动作
 func MobileAction(src, dst string) error {
 	srcContext, err := os.Open(src)
+
 	if err != nil {
 		errContext := fmt.Errorf("error: read %s failed, %s", src, err)
 		return errContext
@@ -177,9 +178,6 @@ func Start(files []string) {
 	dstFile := FileAbs(files[fileNumber-1])
 	srcFiles := files[:fileNumber-1]
 
-	fmt.Println("src: ", srcFiles)
-	fmt.Println("dst: ", dstFile)
-
 	for i := 0; i < len(srcFiles); i++ {
 		srcFiles[i] = FileAbs(srcFiles[i])
 	}
@@ -201,7 +199,6 @@ func Init() {
 		KEEP = false
 	}
 	if BACKUP && SUFFIX == "" {
-		fmt.Println(11)
 		SUFFIX = time.Now().Format("200601021504")
 	}
 
@@ -231,7 +228,7 @@ func main() {
 		Help()
 		os.Exit(0)
 	}
-	fmt.Println(SUFFIX == "", SUFFIX)
+
 	Init()
 	Start(flag.Args())
 }
