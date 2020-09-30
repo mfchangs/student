@@ -2,23 +2,26 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"time"
+	"log"
+
+	"gopkg.in/ini.v1"
 )
 
-func test() {
-	logfile, _ := os.Open("/tmp/test.log")
-	shell := exec.Command("ping", "www.baidu.com")
-	shell.Stdout = logfile
-	err := shell.Start()
-	if err != nil {
-		fmt.Print(err)
+func main() {
+	cfg, err := ini.Load("config.ini")
+	getErr("load config", err)
+
+	// 遍历所有的section
+	for _, v := range cfg.Sections() {
+		fmt.Println("v: ", v.Name())
+		fmt.Println(v.KeyStrings())
 	}
+
+	fmt.Println(cfg.Section("name:ping").Key("bin").String())
 }
 
-func main() {
-	test()
-	fmt.Print("pid: ", os.Getpid())
-	time.Sleep(10000000000)
+func getErr(msg string, err error) {
+	if err != nil {
+		log.Printf("%v err->%v\n", msg, err)
+	}
 }

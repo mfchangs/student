@@ -1,0 +1,8 @@
+1 进程启动时检查进程是否已启动
+    通过mprocess.ini配置文件中指定的pid进行判断.没有pid文件则视为没有启动
+    没启动,则启动
+    如已启动,显示"mprocess exist running", 退出码为1
+2 写pid\日志
+3 
+
+    

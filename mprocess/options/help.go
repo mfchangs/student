@@ -1,8 +1,15 @@
 package options
 
-type Help struct {
+import "flag"
+
+// HELP 帮助变量
+var HELP bool
+
+// HelpOptions 帮助选项
+type HelpOptions struct {
 }
 
-func (h *Help) help() {
-
+// Help 1234
+func (h *HelpOptions) Help() {
+	flag.Usage()
 }

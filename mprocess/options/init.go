@@ -1,18 +1,24 @@
 package options
 
-import "flag"
+import (
+	"flag"
+	"os"
+)
 
 var (
-	HELP     bool
-	CONFIG   string
 	LIST     bool
 	RELOAD   bool
 	RESTART  bool
 	STOP     bool
 	MSTOP    string
 	MRESTART string
+	HELP1    bool
 )
 
+// H 变量
+var H = HelpOptions{}
+
+// Options 选项
 func Options() {
 	flag.BoolVar(&HELP, "h", false, "查看帮助")
 	flag.BoolVar(&LIST, "list", false, "显示进程监控状态")
@@ -22,4 +28,10 @@ func Options() {
 	flag.StringVar(&CONFIG, "config", "/etc/mprocess/mprocess.ini", "指定mprocess进程配置文件")
 	flag.StringVar(&MSTOP, "mstop", "", "停止指定监控进程")
 	flag.StringVar(&MRESTART, "mrestart", "", "重启指定监控进程")
+
+	flag.Parse()
+	if HELP {
+		H.Help()
+		os.Exit(0)
+	}
 }
